@@ -42,6 +42,7 @@ fn export_writes_a_docx_package() {
     assert!(r.status.success(), "{}", String::from_utf8_lossy(&r.stderr));
     let bytes = std::fs::read(&out).unwrap();
     assert!(bytes.starts_with(b"PK\x03\x04"), "not a DOCX package: {:?}", &bytes[..16]);
+    assert!(bytes.windows(b"word/document.xml".len()).any(|w| w == b"word/document.xml"));
 }
 
 #[test]
@@ -56,4 +57,5 @@ fn export_accepts_a_password_that_is_an_option_name() {
     assert!(r.status.success(), "{}", String::from_utf8_lossy(&r.stderr));
     let bytes = std::fs::read(&out).unwrap();
     assert!(bytes.starts_with(b"PK\x03\x04"), "not a DOCX package: {:?}", &bytes[..16]);
+    assert!(bytes.windows(b"word/document.xml".len()).any(|w| w == b"word/document.xml"));
 }
