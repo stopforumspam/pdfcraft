@@ -103,7 +103,8 @@ pub(crate) const RENDER_OPTIONS: &[OptionSpec] = &[
     OptionSpec { name: "--password", takes_value: true },
 ];
 
-pub(crate) const EXPORT_OPTIONS: &[OptionSpec] = &[OptionSpec { name: "--out", takes_value: true }, OptionSpec { name: "--password", takes_value: true }];
+pub(crate) const EXPORT_OPTIONS: &[OptionSpec] =
+    &[OptionSpec { name: "--out", takes_value: true }, OptionSpec { name: "--password", takes_value: true }];
 
 pub(crate) const CHECK_ONE_OPTIONS: &[OptionSpec] =
     &[OptionSpec { name: "--dpi", takes_value: true }, OptionSpec { name: "--edit", takes_value: false }];
