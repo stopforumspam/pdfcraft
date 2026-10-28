@@ -303,6 +303,10 @@ pub(crate) fn export(args: &[String]) -> Result<(), CliError> {
     let mut session = pdfcraft_engine::Session::new();
     let id = session.open(path, None, bytes, password).map_err(|e| e.to_string())?;
     let doc = session.get(id).ok_or("export: the document could not be opened")?;
+    if !doc.editable() {
+        let reason = doc.read_only_reason.clone().unwrap_or_else(|| "the document is read-only".to_string());
+        return Err(format!("export: {reason}").into());
+    }
     // Copying text and images out of a PDF is disallowed by the permissions bit even when the
     // user password opens it. Ask the same permission gate as the text command and automation.
     doc.check_copying().map_err(
