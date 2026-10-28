@@ -5325,7 +5325,7 @@ fn exporting_office_files_embeds_images_in_rtf() {
     assert!(rtf.truncated_pages.is_empty());
     let out = String::from_utf8(rtf.bytes).unwrap();
     assert!(out.contains("\\pict\\pngblip"), "{out}");
-    assert!(out.contains("\\x89\\x50\\x4E\\x47\\x0D\\x0A\\x1A\\x0A"), "{out}");
+    assert!(out.contains("89504E470D0A1A0A"), "{out}");
 }
 
 /// #314: a page whose content is drawn through a form XObject exports its text (the file from
