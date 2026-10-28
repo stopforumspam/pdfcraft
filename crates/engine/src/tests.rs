@@ -5309,6 +5309,25 @@ fn exporting_office_files_keeps_images() {
     assert!(String::from_utf8(d.export_office(compare::OfficeFormat::Html)).unwrap().contains("data:image/png;base64,"));
 }
 
+#[test]
+fn exporting_office_files_embeds_images_in_rtf() {
+    let mut s = Session::new();
+    let text = s.create_from_text("t", "Picture page").unwrap();
+    let id = s.open("t.pdf", None, text, None).unwrap();
+    let png = export::Exporter::new(s.get(id).unwrap()).png(0, 20.0).unwrap();
+    let pic = s.create_from_images(&[("p.png".into(), png)]).unwrap();
+    let pid = s.open("p.pdf", None, pic, None).unwrap();
+    let d = s.get(pid).unwrap();
+    let html = d.export_office(compare::OfficeFormat::Html);
+    assert!(String::from_utf8(html.clone()).unwrap().contains("data:image/png;base64,"));
+
+    let rtf = d.export_office_checked(compare::OfficeFormat::Rtf);
+    assert!(rtf.truncated_pages.is_empty());
+    let out = String::from_utf8(rtf.bytes).unwrap();
+    assert!(out.contains("\\pict\\pngblip"), "{out}");
+    assert!(out.contains("\\x89\\x50\\x4E\\x47\\x0D\\x0A\\x1A\\x0A"), "{out}");
+}
+
 /// #314: a page whose content is drawn through a form XObject exports its text (the file from
 /// the report: no xref table, wrong stream lengths).
 #[test]
