@@ -130,7 +130,11 @@ pub fn rtf(pages: &[Page]) -> String {
                 let kind = if im.ext == "jpg" { "jpeg" } else { "png" };
                 let width = (im.size[0].max(1.0) * 20.0).round() as i64;
                 let height = (im.size[1].max(1.0) * 20.0).round() as i64;
-                s.push_str(&format!("{{\\pict\\{kind}blip\\picw{width}\\pich{height}\\picwgoal{width}\\pichgoal{height}\\bin{} {} }}", im.bytes.len(), rtf_hex(&im.bytes)));
+                s.push_str(&format!(
+                    "{{\\pict\\{kind}blip\\picw{width}\\pich{height}\\picwgoal{width}\\pichgoal{height}\\bin{} {} }}",
+                    im.bytes.len(),
+                    rtf_hex(&im.bytes)
+                ));
             }
             Item::PageBreak => s.push_str("\\page\n"),
         }
