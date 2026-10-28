@@ -293,6 +293,32 @@ pub(crate) fn combine(args: &[String]) -> Result<(), CliError> {
     write_pdf(Path::new(out), &bytes)
 }
 
+pub(crate) fn export(args: &[String]) -> Result<(), CliError> {
+    use pdfcraft_engine::compare::OfficeFormat;
+    validate_options("export", args, super::options::EXPORT_OPTIONS)?;
+    let path = *positional(args, super::options::EXPORT_OPTIONS).first().ok_or("export: missing file")?;
+    let out = flag(args, "--out").ok_or("export: missing --out (.docx, .pptx, .html or .rtf)")?;
+    let password = flag(args, "--password");
+    let bytes = read(path)?;
+    let mut session = pdfcraft_engine::Session::new();
+    let id = session.open(path, None, bytes, password).map_err(|e| e.to_string())?;
+    let doc = session.get(id).ok_or("export: the document could not be opened")?;
+    let ext = Path::new(out).extension().and_then(std::ffi::OsStr::to_str).map(str::to_ascii_lowercase);
+    let format = match ext.as_deref() {
+        Some("docx") => OfficeFormat::Docx,
+        Some("pptx") => OfficeFormat::Pptx,
+        Some("html") | Some("htm") => OfficeFormat::Html,
+        Some("rtf") => OfficeFormat::Rtf,
+        _ => return Err(format!("export: --out {out}: use a .docx, .pptx, .html or .rtf name").into()),
+    };
+    let exported = doc.export_office_checked(format);
+    if !exported.truncated_pages.is_empty() {
+        let pages = exported.truncated_pages.iter().map(|p| (p + 1).to_string()).collect::<Vec<_>>();
+        let _ = writeln!(std::io::stderr().lock(), "warning: export skipped some content on pages {}", pages.join(", "));
+    }
+    write_pdf(Path::new(out), &exported.bytes)
+}
+
 pub(crate) fn extract(args: &[String]) -> Result<(), CliError> {
     validate_options("extract", args, EXTRACT_OPTIONS)?;
     let path = *positional(args, EXTRACT_OPTIONS).first().ok_or("extract: missing file")?;
