@@ -6840,6 +6840,16 @@ fn exporting_to_word_html_and_rtf() {
     assert!(std::fs::read(dir.join("a.pptx")).unwrap().starts_with(b"PK"));
     assert!(std::fs::read_to_string(dir.join("a.rtf")).unwrap().contains("Page 2"));
     assert!(a.call("doc_export_office", &json!({ "doc": doc, "path": "a.xyz" })).is_err());
+
+    let source = dir.join("nested/source.pdf");
+    std::fs::create_dir_all(source.parent().unwrap()).unwrap();
+    std::fs::copy(dir.join("a.pdf"), &source).unwrap();
+    let nested = ok(&mut a, "doc_open", json!({ "path": source.to_string_lossy() }))["doc"].as_u64().unwrap();
+    let r = ok(&mut a, "doc_export_office", json!({ "doc": nested, "path": "nested.html" }));
+    let html = std::fs::read_to_string(dir.join("nested.html")).unwrap();
+    assert_eq!(r["path"], "nested.html");
+    assert!(!html.contains(source.to_string_lossy().as_ref()), "{html}");
+    assert!(!html.contains(source.parent().unwrap().to_string_lossy().as_ref()), "{html}");
 }
 
 /// #3120: a PDF whose pages draw "Head", then a chain of `depths[page]` nested forms whose
