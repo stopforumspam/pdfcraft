@@ -43,3 +43,17 @@ fn export_writes_a_docx_package() {
     let bytes = std::fs::read(&out).unwrap();
     assert!(bytes.starts_with(b"PK\x03\x04"), "not a DOCX package: {:?}", &bytes[..16]);
 }
+
+#[test]
+fn export_accepts_a_password_that_is_an_option_name() {
+    let dir = TempDirGuard::new("password-option-name");
+    let pdf = fixture(&dir);
+    let out = dir.file("report.docx");
+    let r = Command::new(BIN)
+        .args(["export", pdf.to_str().unwrap(), "--password", "--out", "--out", out.to_str().unwrap()])
+        .output()
+        .unwrap();
+    assert!(r.status.success(), "{}", String::from_utf8_lossy(&r.stderr));
+    let bytes = std::fs::read(&out).unwrap();
+    assert!(bytes.starts_with(b"PK\x03\x04"), "not a DOCX package: {:?}", &bytes[..16]);
+}

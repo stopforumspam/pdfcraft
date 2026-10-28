@@ -1,6 +1,6 @@
 use super::options::{
-    COMBINE_OPTIONS, EXTRACT_OPTIONS, INFO_OPTIONS, RENDER_OPTIONS, SPLIT_OPTIONS, TEXT_OPTIONS, can_be_path_value, flag, needs_value, positional,
-    validate_options,
+    COMBINE_OPTIONS, EXTRACT_OPTIONS, INFO_OPTIONS, RENDER_OPTIONS, SPLIT_OPTIONS, TEXT_OPTIONS, can_be_path_value, flag, flag_in_order, needs_value,
+    positional, validate_options,
 };
 use super::{Arc, CliError, ImageFormat, PageRenderer, Path, PathBuf, RenderConfig, RenderRequest, RequestKind, Write, inspect, stdout_line};
 
@@ -297,8 +297,8 @@ pub(crate) fn export(args: &[String]) -> Result<(), CliError> {
     use pdfcraft_engine::compare::OfficeFormat;
     validate_options("export", args, super::options::EXPORT_OPTIONS)?;
     let path = *positional(args, super::options::EXPORT_OPTIONS).first().ok_or("export: missing file")?;
-    let out = flag(args, "--out").ok_or("export: missing --out (.docx, .pptx, .html or .rtf)")?;
-    let password = flag(args, "--password");
+    let out = flag_in_order(args, "--out", super::options::EXPORT_OPTIONS).ok_or("export: missing --out (.docx, .pptx, .html or .rtf)")?;
+    let password = flag_in_order(args, "--password", super::options::EXPORT_OPTIONS);
     let bytes = read(path)?;
     let mut session = pdfcraft_engine::Session::new();
     let id = session.open(path, None, bytes, password).map_err(|e| e.to_string())?;
