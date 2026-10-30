@@ -141,6 +141,7 @@ pub enum OfficeFormat {
     Pptx,
     Html,
     Rtf,
+    Markdown,
 }
 
 impl OfficeFormat {
@@ -150,6 +151,7 @@ impl OfficeFormat {
             OfficeFormat::Pptx => "pptx",
             OfficeFormat::Html => "html",
             OfficeFormat::Rtf => "rtf",
+            OfficeFormat::Markdown => "md",
         }
     }
 
@@ -159,12 +161,13 @@ impl OfficeFormat {
             "pptx" => Some(OfficeFormat::Pptx),
             "html" | "htm" => Some(OfficeFormat::Html),
             "rtf" => Some(OfficeFormat::Rtf),
+            "md" | "markdown" => Some(OfficeFormat::Markdown),
             _ => None,
         }
     }
 }
 
-/// A Word, PowerPoint, HTML or RTF export ([`crate::Document::export_office_checked`]).
+/// A Word, PowerPoint, HTML, RTF or Markdown export ([`crate::Document::export_office_checked`]).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct OfficeExport {
     /// The exported file.
@@ -287,11 +290,16 @@ impl crate::Document {
                 .map(str::to_owned)
                 .unwrap_or_else(|| "Document".to_string())
         });
+        // RTF and Markdown leave pictures out.
+        let (pages, truncated_pages) =
+            self.export_pages_checked(!matches!(format, OfficeFormat::Rtf | OfficeFormat::Markdown), MAX_EXPORT_IMAGE_BYTES);
+        let title = self.info.title.clone().unwrap_or_else(|| self.name.trim_end_matches(".pdf").to_string());
         let bytes = match format {
             OfficeFormat::Docx => pdfcraft_export::docx(&pages, &title),
             OfficeFormat::Pptx => pdfcraft_export::pptx(&pages, &title),
             OfficeFormat::Html => pdfcraft_export::html(&pages, &title).into_bytes(),
             OfficeFormat::Rtf => pdfcraft_export::rtf(&pages).into_bytes(),
+            OfficeFormat::Markdown => pdfcraft_export::markdown(&pages).into_bytes(),
         };
         OfficeExport { bytes, truncated_pages }
     }
